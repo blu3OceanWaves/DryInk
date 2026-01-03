@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DryInk | Archive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Inter:wght@100;200;300;400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* THE LIMIT OF PREMIUMNESS */
+        :root {
+            --bg-color: #050505;
+            --text-color: #e0e0e0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            font-weight: 200;
+            cursor: auto; /* Default cursor for mobile */
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        h1, h2, h3, .serif-font {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+        }
+
+        /* Canvas Layers */
+        #fluid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        #veins-bg {
+            position: absolute; /* Absolute to stick to top only */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh; /* Only covers first viewport */
+            z-index: -1;
+            pointer-events: none;
+            mix-blend-mode: multiply; /* Blend like ink */
+            opacity: 0.8; 
+        }
+
+        /* Cursor - Desktop Only */
+        @media (min-width: 768px) {
+            body {
+                cursor: none;
+            }
+            .cursor-dot {
+                position: fixed;
+                top: 0;
+                left: 0;
+                transform: translate(-50%, -50%);
+                width: 4px;
+                height: 4px;
+                background-color: white;
+                border-radius: 50%;
+                z-index: 9999;
+                pointer-events: none;
+                mix-blend-mode: exclusion;
+                display: block;
+            }
+
+            .cursor-circle {
+                position: fixed;
+                top: 0;
+                left: 0;
+                transform: translate(-50%, -50%);
+                width: 50px;
+                height: 50px;
+                border: 0.5px solid rgba(255, 255, 255, 0.2);
+                border-radius: 50%;
+                z-index: 9998;
+                pointer-events: none;
+                transition: width 0.4s ease, height 0.4s ease, border-color 0.4s ease;
+                display: block;
+            }
+
+            body.hovering .cursor-circle {
+                width: 20px;
+                height: 20px;
+                background: white;
+                border-color: white;
+                mix-blend-mode: exclusion;
+            }
+        }
+        
+        /* Hide cursor elements on mobile */
+        @media (max-width: 767px) {
+            .cursor-dot, .cursor-circle {
+                display: none !important;
+            }
+        }
+
+        /* Scroll Line */
+        #scroll-line {
+            transition: height 0.05s linear;
+        }
+
+        /* Gallery Animations */
+        .gallery-item {
+            break-inside: avoid;
+            margin-bottom: 80px;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(60px);
+            transition: all 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .gallery-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gallery-img {
+            transition: transform 1.8s cubic-bezier(0.19, 1, 0.22, 1), filter 0.8s ease;
+            filter: grayscale(100%) brightness(0.9) contrast(1.1);
+            width: 100%;
+            display: block;
+        }
+
+        .gallery-item:hover .gallery-img {
+            transform: scale(1.02);
+            filter: grayscale(0%) brightness(1.0) contrast(1.0);
+        }
+
+        .gallery-overlay {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+        }
+
+        /* Drawing Animation for Title */
+        .drawing-path {
+            fill: transparent;
+            stroke: #f0f0f0; /* Off-white for premium feel */
+            stroke-width: 0.8px; /* Very thin, elegant line */
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            /* 1. Draw the line (3s), 2. Wait a bit, 3. Fill the text (1.5s) */
+            animation: drawStroke 3.5s cubic-bezier(0.25, 1, 0.5, 1) forwards 0.2s, fillIn 2s ease-out forwards 2.8s;
+        }
+
+        @keyframes drawStroke {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes fillIn {
+            from { fill: transparent; }
+            to { fill: #f0f0f0; }
+        }
+
+        /* Noise */
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9000;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1.5s ease;
+        }
+        
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fluid Background (Blobs) -->
+    <canvas id="fluid-bg"></canvas>
+    
+    <!-- Veins Background (Top Only) -->
+    <canvas id="veins-bg"></canvas>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="flex flex-col items-center">
+            <div class="text-[10px] tracking-[0.5em] text-white/50 mb-4 uppercase">Loading Archive</div>
+            <div class="h-[1px] w-0 bg-white animate-[grow_1.5s_ease-out_forwards]"></div>
+        </div>
+    </div>
+    <style>
+        @keyframes grow { to { width: 40px; } }
+    </style>
+
+    <!-- Custom Cursor Elements -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-circle" id="cursor-circle"></div>
+
+    <!-- Noise Texture -->
+    <div class="noise-overlay"></div>
+
+    <!-- The Spine (Fixed Line) -->
+    <div id="scroll-line" class="fixed left-1/2 -translate-x-1/2 w-[1px] bg-white/10 z-0 pointer-events-none" style="top: 60vh; height: 0px;"></div>
+
+    <!-- Micro Nav -->
+    <nav class="fixed w-full z-50 top-0 left-0 py-10 px-10 md:px-16 flex justify-between items-start mix-blend-exclusion pointer-events-none">
+        <div class="text-xs tracking-[0.2em] font-light text-white pointer-events-auto cursor-hover-trigger opacity-80 hover:opacity-100 transition-opacity">
+            DRYINK.
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="h-screen w-full flex flex-col justify-center items-center relative px-6 text-center overflow-hidden">
+        <!-- Gradient Fade for Veins -->
+        <div class="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></div>
+        
+        <div class="z-10 relative flex flex-col items-center w-full">
+            <span class="text-white/30 tracking-[0.5em] text-[8px] mb-8 uppercase fade-in-up">Est. 2025</span>
+            
+            <!-- SVG Drawing Animation Title -->
+            <div class="w-full max-w-4xl h-48 md:h-64 lg:h-80 flex justify-center items-center mb-6">
+                <svg viewBox="0 0 800 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+                    <!-- Text Definition -->
+                    <text x="50%" y="60%" text-anchor="middle" class="drawing-path mix-blend-difference">
+                        <!-- 'Dry' in Serif Italic -->
+                        <tspan font-family="'Cormorant Garamond', serif" font-style="italic" font-weight="300" font-size="160">Dry</tspan>
+                        <!-- 'Ink' in Sans-Serif Thin -->
+                        <tspan font-family="'Inter', sans-serif" font-weight="100" font-size="160">Ink</tspan>
+                    </text>
+                </svg>
+            </div>
+            
+            <div class="h-40 w-px my-4"></div>
+
+            <span class="text-[8px] text-white/30 tracking-[0.4em] fade-in-up uppercase" style="animation-delay: 0.6s;">
+                scroll down
+            </span>
+        </div>
+    </header>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="py-48 px-6 md:px-24 max-w-[2000px] mx-auto min-h-screen relative">
+        
+        <div class="flex flex-col items-center mb-32 opacity-0 transition-opacity duration-1000" id="gallery-header">
+            <span class="text-[9px] tracking-[0.3em] uppercase text-white/40">Archive Collection // Vol. 1</span>
+            <div class="w-1.5 h-1.5 bg-white rounded-full mt-6"></div>
+        </div>
+
+        <div class="columns-1 md:columns-2 lg:columns-3 gap-20 space-y-20">
+            
+            <!-- Item 1: BEGINNING -->
+            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/cImZXwX.png', 'BEGINNING', 'Ink on Paper / 2026')">
+                <img src="https://i.imgur.com/cImZXwX.png" alt="BEGINNING" class="gallery-img">
+                <div class="gallery-overlay absolute bottom-0 left-0 w-full p-4 md:p-6 opacity-0">
+                    <div class="border-t border-white/20 pt-3 flex justify-between items-end">
+                        <h3 class="serif-font text-lg italic text-white">BEGINNING</h3>
+                        <span class="text-[8px] tracking-widest text-white/50">01</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 2: POLAR -->
+            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/K7CRnVE.png', 'POLAR', 'Ink Illustration / 2026')">
+                <img src="https://i.imgur.com/K7CRnVE.png" alt="POLAR" class="gallery-img">
+                <div class="gallery-overlay absolute bottom-0 left-0 w-full p-4 md:p-6 opacity-0">
+                     <div class="border-t border-white/20 pt-3 flex justify-between items-end">
+                        <h3 class="serif-font text-lg italic text-white">POLAR</h3>
+                        <span class="text-[8px] tracking-widest text-white/50">02</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 3: KOMPLEX -->
+            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/3Aq9wfg.png', 'KOMPLEX', 'Structural Ink / 2026')">
+                <img src="https://i.imgur.com/3Aq9wfg.png" alt="KOMPLEX" class="gallery-img">
+                 <div class="gallery-overlay absolute bottom-0 left-0 w-full p-4 md:p-6 opacity-0">
+                     <div class="border-t border-white/20 pt-3 flex justify-between items-end">
+                        <h3 class="serif-font text-lg italic text-white">KOMPLEX</h3>
+                        <span class="text-[8px] tracking-widest text-white/50">03</span>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Item 4: INK -->
+             <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/47GG2IJ.png', 'INK', 'Fluid Dynamics / 2026')">
+                <img src="https://i.imgur.com/47GG2IJ.png" alt="INK" class="gallery-img">
+                 <div class="gallery-overlay absolute bottom-0 left-0 w-full p-4 md:p-6 opacity-0">
+                     <div class="border-t border-white/20 pt-3 flex justify-between items-end">
+                        <h3 class="serif-font text-lg italic text-white">INK</h3>
+                        <span class="text-[8px] tracking-widest text-white/50">04</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- More to Come -->
+        <div class="flex flex-col items-center mt-32">
+            <span class="text-[9px] tracking-[0.4em] uppercase text-white/30 animate-pulse">More to come</span>
+            <div class="w-px h-12 bg-white/10 mt-6"></div>
+        </div>
+    </section>
+
+    <!-- About Section - THE VOID -->
+    <section id="about" class="py-48 relative flex flex-col items-center justify-center">
+        <!-- The line ends here -->
+         <div class="w-1.5 h-1.5 bg-white rounded-full mb-12"></div>
+
+        <!-- Pure Data, No Emotion -->
+        <div class="grid grid-cols-2 gap-32 md:gap-64 text-center">
+            <div class="flex flex-col gap-2">
+                <span class="text-[8px] uppercase tracking-[0.4em] text-gray-600">Works</span>
+                <span class="text-4xl font-thin text-white">4</span>
+            </div>
+            <div class="flex flex-col gap-2">
+                <span class="text-[8px] uppercase tracking-[0.4em] text-gray-600">Origin</span>
+                <span class="text-4xl font-thin text-white">DE</span>
+            </div>
+        </div>
+
+        <!-- Signature -->
+        <div class="mt-32 serif-font italic text-white/20 text-2xl">
+            Dry Ink.
+        </div>
+    </section>
+
+    <!-- Invisible Footer -->
+    <footer class="py-6 text-center">
+        <p class="text-[8px] text-white/10 tracking-[0.5em] uppercase cursor-default">All Rights Reserved</p>
+    </footer>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 z-[10000] bg-black hidden flex flex-col justify-center items-center opacity-0 transition-opacity duration-700">
+        <button onclick="closeLightbox()" class="absolute top-10 right-10 text-white/30 hover:text-white transition-colors cursor-hover-trigger">
+            <i data-lucide="x" class="w-8 h-8 stroke-1"></i>
+        </button>
+        <img id="lightbox-img" src="" alt="Full view" class="max-h-[85vh] max-w-[95vw] object-contain shadow-[0_0_100px_rgba(255,255,255,0.05)] mb-8 grayscale">
+        <div class="text-center">
+            <h3 id="lightbox-title" class="serif-font text-3xl italic text-white mb-2 font-light"></h3>
+            <p id="lightbox-desc" class="text-[8px] text-gray-500 uppercase tracking-[0.4em]"></p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // ----------------------
+        // VEINS (DRIED INK) LOGIC
+        // ----------------------
+        const veinsCanvas = document.getElementById('veins-bg');
+        const veinsCtx = veinsCanvas.getContext('2d');
+        let veinsW, veinsH;
+
+        function resizeVeins() {
+            veinsW = veinsCanvas.width = window.innerWidth;
+            veinsH = veinsCanvas.height = window.innerHeight;
+            drawVeins();
+        }
+
+        function drawVeins() {
+            veinsCtx.clearRect(0, 0, veinsW, veinsH);
+            veinsCtx.strokeStyle = 'rgba(20, 20, 20, 0.8)'; // Dark ink color
+            veinsCtx.lineCap = 'round';
+            
+            // Start a few roots from top
+            const roots = 5;
+            for(let i=0; i<roots; i++) {
+                const startX = (veinsW / roots) * i + (Math.random() * 100);
+                growRoot(startX, 0, 90, 6); // x, y, angle (down), width
+            }
+        }
+
+        function growRoot(x, y, angle, width) {
+            if (width < 0.5 || y > veinsH * 0.6) return; // Stop if too thin or too deep
+
+            const length = Math.random() * 30 + 10;
+            const rad = (angle * Math.PI) / 180;
+            
+            const endX = x + Math.cos(rad) * length;
+            const endY = y + Math.sin(rad) * length;
+
+            veinsCtx.beginPath();
+            veinsCtx.moveTo(x, y);
+            veinsCtx.lineTo(endX, endY);
+            veinsCtx.lineWidth = width;
+            veinsCtx.stroke();
+
+            // Chance to split
+            const splitChance = Math.random();
+            if (splitChance > 0.6) {
+                // Split into two
+                growRoot(endX, endY, angle + Math.random() * 40 - 20, width * 0.7);
+                growRoot(endX, endY, angle + Math.random() * 40 - 20, width * 0.7);
+            } else {
+                // Continue straight-ish
+                growRoot(endX, endY, angle + Math.random() * 20 - 10, width * 0.9);
+            }
+        }
+
+        // ----------------------
+        // FLUID BACKGROUND LOGIC
+        // ----------------------
+        const fluidCanvas = document.getElementById('fluid-bg');
+        const fluidCtx = fluidCanvas.getContext('2d');
+        let canvasWidth, canvasHeight;
+        const orbs = [];
+
+        function resizeFluid() {
+            canvasWidth = fluidCanvas.width = window.innerWidth;
+            canvasHeight = fluidCanvas.height = window.innerHeight;
+        }
+
+        class Orb {
+            constructor() {
+                this.x = Math.random() * canvasWidth;
+                this.y = Math.random() * canvasHeight;
+                this.vx = (Math.random() - 0.5) * 0.2; 
+                this.vy = (Math.random() - 0.5) * 0.2;
+                this.radius = Math.random() * 300 + 200; 
+                this.baseAlpha = Math.random() * 0.05 + 0.02; 
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < -this.radius) this.vx *= -1;
+                if (this.x > canvasWidth + this.radius) this.vx *= -1;
+                if (this.y < -this.radius) this.vy *= -1;
+                if (this.y > canvasHeight + this.radius) this.vy *= -1;
+            }
+
+            draw() {
+                const g = fluidCtx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                g.addColorStop(0, `rgba(200, 200, 200, ${this.baseAlpha})`);
+                g.addColorStop(1, 'rgba(200, 200, 200, 0)');
+
+                fluidCtx.fillStyle = g;
+                fluidCtx.beginPath();
+                fluidCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                fluidCtx.fill();
+            }
+        }
+
+        function initFluid() {
+            resizeFluid();
+            for(let i=0; i<6; i++) {
+                orbs.push(new Orb());
+            }
+            animateFluid();
+        }
+
+        function animateFluid() {
+            fluidCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+            orbs.forEach(orb => {
+                orb.update();
+                orb.draw();
+            });
+            requestAnimationFrame(animateFluid);
+        }
+
+        window.addEventListener('resize', () => {
+            resizeFluid();
+            resizeVeins();
+        });
+        
+        initFluid();
+        // Init Veins slightly delayed to ensure sizing
+        setTimeout(resizeVeins, 100);
+
+
+        // ----------------------
+        // EXISTING UI LOGIC
+        // ----------------------
+
+        // Cursor Logic (Enhanced with Mobile Check)
+        const cursorDot = document.getElementById("cursor-dot");
+        const cursorCircle = document.getElementById("cursor-circle");
+        
+        // Only activate custom cursor logic if device supports hover (desktop)
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+            window.addEventListener("mousemove", (e) => {
+                const posX = e.clientX;
+                const posY = e.clientY;
+
+                cursorDot.style.left = `${posX}px`;
+                cursorDot.style.top = `${posY}px`;
+
+                cursorCircle.animate({
+                    left: `${posX}px`,
+                    top: `${posY}px`
+                }, { duration: 800, fill: "forwards" });
+            });
+
+            const interactables = document.querySelectorAll('a, button, .cursor-hover-trigger');
+            interactables.forEach(el => {
+                el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+                el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+            });
+        }
+
+        // Line Logic
+        const scrollLine = document.getElementById('scroll-line');
+        const lineGrowFactor = 1.0; 
+
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const newHeight = 160 + (scrollY * lineGrowFactor);
+            scrollLine.style.height = `${newHeight}px`;
+        });
+
+        // Observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                    if(document.getElementById('gallery-header')) {
+                         document.getElementById('gallery-header').style.opacity = '1';
+                    }
+                }
+            });
+        }, { threshold: 0.05 });
+
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            observer.observe(item);
+        });
+
+        // Lightbox
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxTitle = document.getElementById('lightbox-title');
+        const lightboxDesc = document.getElementById('lightbox-desc');
+
+        function openLightbox(src, title, desc) {
+            lightboxImg.src = src;
+            lightboxTitle.innerText = title;
+            lightboxDesc.innerText = desc;
+            
+            lightbox.classList.remove('hidden');
+            setTimeout(() => {
+                lightbox.classList.remove('opacity-0');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => {
+                lightbox.classList.add('hidden');
+                lightboxImg.src = '';
+            }, 700);
+            document.body.style.overflow = '';
+        }
+
+        // Loader
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    document.getElementById('scroll-line').style.height = '160px'; 
+                }, 1500);
+            }, 1200);
+        });
+    </script>
+</body>
+</html>

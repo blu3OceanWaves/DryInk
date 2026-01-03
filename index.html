@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DryInk | Archive</title>
+    
+    <!-- Favicon: DI in Black on White Square -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23ffffff%22/><text x=%2250%25%22 y=%2250%25%22 font-family=%22serif%22 font-weight=%22bold%22 font-size=%2255%22 fill=%22%23000000%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>DI</text></svg>">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +25,7 @@
             color: var(--text-color);
             font-family: 'Inter', sans-serif;
             font-weight: 200;
-            cursor: auto; /* Default cursor for mobile */
+            cursor: auto; /* Default cursor */
             overflow-x: hidden;
             margin: 0;
         }
@@ -53,57 +57,6 @@
             pointer-events: none;
             mix-blend-mode: multiply; /* Blend like ink */
             opacity: 0.8; 
-        }
-
-        /* Cursor - Desktop Only */
-        @media (min-width: 768px) {
-            body {
-                cursor: none;
-            }
-            .cursor-dot {
-                position: fixed;
-                top: 0;
-                left: 0;
-                transform: translate(-50%, -50%);
-                width: 4px;
-                height: 4px;
-                background-color: white;
-                border-radius: 50%;
-                z-index: 9999;
-                pointer-events: none;
-                mix-blend-mode: exclusion;
-                display: block;
-            }
-
-            .cursor-circle {
-                position: fixed;
-                top: 0;
-                left: 0;
-                transform: translate(-50%, -50%);
-                width: 50px;
-                height: 50px;
-                border: 0.5px solid rgba(255, 255, 255, 0.2);
-                border-radius: 50%;
-                z-index: 9998;
-                pointer-events: none;
-                transition: width 0.4s ease, height 0.4s ease, border-color 0.4s ease;
-                display: block;
-            }
-
-            body.hovering .cursor-circle {
-                width: 20px;
-                height: 20px;
-                background: white;
-                border-color: white;
-                mix-blend-mode: exclusion;
-            }
-        }
-        
-        /* Hide cursor elements on mobile */
-        @media (max-width: 767px) {
-            .cursor-dot, .cursor-circle {
-                display: none !important;
-            }
         }
 
         /* Scroll Line */
@@ -224,10 +177,6 @@
         @keyframes grow { to { width: 40px; } }
     </style>
 
-    <!-- Custom Cursor Elements -->
-    <div class="cursor-dot" id="cursor-dot"></div>
-    <div class="cursor-circle" id="cursor-circle"></div>
-
     <!-- Noise Texture -->
     <div class="noise-overlay"></div>
 
@@ -281,7 +230,7 @@
         <div class="columns-1 md:columns-2 lg:columns-3 gap-20 space-y-20">
             
             <!-- Item 1: BEGINNING -->
-            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/cImZXwX.png', 'BEGINNING', 'Ink on Paper / 2026')">
+            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/cImZXwX.png', 'BEGINNING', '')">
                 <img src="https://i.imgur.com/cImZXwX.png" alt="BEGINNING" class="gallery-img">
                 <div class="gallery-overlay absolute bottom-0 left-0 w-full p-4 md:p-6 opacity-0">
                     <div class="border-t border-white/20 pt-3 flex justify-between items-end">
@@ -292,7 +241,7 @@
             </div>
 
             <!-- Item 2: POLAR -->
-            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/K7CRnVE.png', 'POLAR', 'Ink Illustration / 2026')">
+            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/K7CRnVE.png', 'POLAR', '')">
                 <img src="https://i.imgur.com/K7CRnVE.png" alt="POLAR" class="gallery-img">
                 <div class="gallery-overlay absolute bottom-0 left-0 w-full p-4 md:p-6 opacity-0">
                      <div class="border-t border-white/20 pt-3 flex justify-between items-end">
@@ -303,7 +252,7 @@
             </div>
 
             <!-- Item 3: KOMPLEX -->
-            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/3Aq9wfg.png', 'KOMPLEX', 'Structural Ink / 2026')">
+            <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/3Aq9wfg.png', 'KOMPLEX', '')">
                 <img src="https://i.imgur.com/3Aq9wfg.png" alt="KOMPLEX" class="gallery-img">
                  <div class="gallery-overlay absolute bottom-0 left-0 w-full p-4 md:p-6 opacity-0">
                      <div class="border-t border-white/20 pt-3 flex justify-between items-end">
@@ -314,7 +263,7 @@
             </div>
 
              <!-- Item 4: INK -->
-             <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/47GG2IJ.png', 'INK', 'Fluid Dynamics / 2026')">
+             <div class="gallery-item cursor-hover-trigger group" onclick="openLightbox('https://i.imgur.com/47GG2IJ.png', 'INK', '')">
                 <img src="https://i.imgur.com/47GG2IJ.png" alt="INK" class="gallery-img">
                  <div class="gallery-overlay absolute bottom-0 left-0 w-full p-4 md:p-6 opacity-0">
                      <div class="border-t border-white/20 pt-3 flex justify-between items-end">
@@ -327,7 +276,7 @@
 
         <!-- More to Come -->
         <div class="flex flex-col items-center mt-32">
-            <span class="text-[9px] tracking-[0.4em] uppercase text-white/30 animate-pulse">More to come</span>
+            <span class="text-[9px] tracking-[0.4em] uppercase text-white/30 animate-pulse">More to come in sha ALLAH</span>
             <div class="w-px h-12 bg-white/10 mt-6"></div>
         </div>
     </section>
@@ -351,7 +300,7 @@
 
         <!-- Signature -->
         <div class="mt-32 serif-font italic text-white/20 text-2xl">
-            Dry Ink.
+            Dry Ink
         </div>
     </section>
 
@@ -497,37 +446,6 @@
         initFluid();
         // Init Veins slightly delayed to ensure sizing
         setTimeout(resizeVeins, 100);
-
-
-        // ----------------------
-        // EXISTING UI LOGIC
-        // ----------------------
-
-        // Cursor Logic (Enhanced with Mobile Check)
-        const cursorDot = document.getElementById("cursor-dot");
-        const cursorCircle = document.getElementById("cursor-circle");
-        
-        // Only activate custom cursor logic if device supports hover (desktop)
-        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-            window.addEventListener("mousemove", (e) => {
-                const posX = e.clientX;
-                const posY = e.clientY;
-
-                cursorDot.style.left = `${posX}px`;
-                cursorDot.style.top = `${posY}px`;
-
-                cursorCircle.animate({
-                    left: `${posX}px`,
-                    top: `${posY}px`
-                }, { duration: 800, fill: "forwards" });
-            });
-
-            const interactables = document.querySelectorAll('a, button, .cursor-hover-trigger');
-            interactables.forEach(el => {
-                el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
-                el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
-            });
-        }
 
         // Line Logic
         const scrollLine = document.getElementById('scroll-line');
